@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부수 체크</title>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none; /* 기본적으로 숨김 */
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-overlay p {
+      color: #fff;
+      font-size: 1.2rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><a href="/">PingPong League</a></h1>
+    <nav>
+      <a th:href="@{/}" class="btn btn-secondary">Home</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="form-container">
+      <h1>부수 체크</h1>
+      <p style="text-align: center; color: var(--text-muted); margin-top: -1.5rem; margin-bottom: 2rem;">
+        선수 이름을 입력하여 대회 입상 기록을 확인하세요.
+      </p>
+      <form id="search-form">
+        <div class="form-group">
+          <label for="playerName">선수 이름</label>
+          <input type="text" id="playerName" name="playerName" class="form-control" placeholder="이름을 입력하세요" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">검색하기</button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<div id="loading-indicator" class="loading-overlay">
+  <div class="spinner"></div>
+
+  <div id="progress-container" style="width: 80%; max-width: 400px; background-color: #e0e0e0; border-radius: 5px; margin-top: 20px; text-align: center; color: black; font-weight: bold; position: relative; height: 30px; line-height: 30px;">
+    <div id="progress-bar" style="width: 0%; height: 100%; background-color: var(--primary-color); border-radius: 5px; transition: width 0.4s ease;">
+    </div>
+    <span id="progress-text" style="position: absolute; width: 100%; left: 0; color: #fff;">선수 데이터를 수집 중...</span>
+  </div>
+
+</div>
+
+<script>
+  const searchForm = document.getElementById('search-form');
+  const loadingIndicator = document.getElementById('loading-indicator');
+  // ▼▼▼ 2. 프로그레스 바 관련 요소 가져오기 ▼▼▼
+  const progressBar = document.getElementById('progress-bar');
+  const progressText = document.getElementById('progress-text');
+
+  searchForm.addEventListener('submit', function (event) {
+    event.preventDefault(); // 1. 폼의 기본 제출 동작을 막습니다.
+
+    const playerName = document.getElementById('playerName').value;
+    if (!playerName) {
+      alert('선수 이름을 입력해주세요.');
+      return;
+    }
+
+    loadingIndicator.style.display = 'flex'; // 2. 로딩 화면을 보여줍니다.
+    progressBar.style.width = '0%'; // 프로그레스 바 초기화
+    progressText.textContent = '선수 데이터를 수집 중...'; // 텍스트 초기화
+
+    // 3. 서버에 크롤링 시작을 요청합니다. (POST 방식)
+    fetch('/checker/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `playerName=${encodeURIComponent(playerName)}`
+    })
+            .then(response => response.json())
+            .then(data => {
+              // 4. 서버로부터 받은 jobId로 상태를 확인하기 시작합니다.
+              startPolling(data.jobId, data.playerName);
+            })
+            .catch(error => {
+              console.error('크롤링 시작 요청 오류:', error);
+              loadingIndicator.style.display = 'none';
+              alert('오류가 발생했습니다. 다시 시도해주세요.');
+            });
+  });
+
+  function startPolling(jobId, playerName) {
+    const pollingInterval = setInterval(() => {
+      fetch(`/checker/status?jobId=${jobId}`)
+              .then(response => response.json())
+              .then(data => {
+                // 실시간으로 프로그레스 바와 텍스트 업데이트
+                progressBar.style.width = data.percentage + '%';
+                progressText.textContent = data.message + ' (' + data.percentage + '%)';
+
+                if (data.status === 'COMPLETED') {
+                  // 작업이 완료되면 폴링을 멈추고 결과 페이지로 이동
+                  clearInterval(pollingInterval);
+                  // 완료 메시지를 잠시 보여주기 위해 0.5초 대기
+                  setTimeout(() => {
+                    window.location.href = `/checker/results?playerName=${encodeURIComponent(playerName)}`;
+                  }, 500);
+                }
+              })
+              .catch(error => {
+                console.error('상태 확인 중 오류 발생:', error);
+                clearInterval(pollingInterval);
+                loadingIndicator.style.display = 'none';
+                alert('상태 확인 중 오류가 발생했습니다.');
+              });
+    }, 1000);
+  }
+</script>
+</body>
+</html>

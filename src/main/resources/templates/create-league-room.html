@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리그 방 생성</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <form id="create-room-form" class="form-container">
+        <h1>새로운 리그 방 생성</h1>
+        <div class="form-group">
+            <label for="title">방 제목</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="maxParticipants">최대 참가 인원</label>
+            <input type="number" id="maxParticipants" name="maxParticipants" required>
+        </div>
+        <div class="form-group">
+            <label for="eventDate">경기 날짜</label>
+            <input type="date" id="eventDate" name="eventDate" required>
+        </div>
+        <div class="form-group">
+            <label for="eventTime">경기 시간</label>
+            <input type="time" id="eventTime" name="eventTime" required>
+        </div>
+        <div class="form-group">
+            <label for="gameType">경기 방식</label>
+            <select id="gameType" name="gameType" required>
+                <option th:each="type : ${gameTypes}"
+                        th:value="${type.name()}"
+                        th:text="${type.displayName}"></option>
+            </select>
+        </div>
+        <div class="form-group" id="teamOptionsGroup" style="display: none;">
+            <label for="teamSize">단체전 인원수</label>
+            <select id="teamSize" name="teamSize">
+                <option value="2">2인 단체전</option>
+                <option value="3">3인 단체전</option>
+            </select>
+            <label for="teamMatchFormat" style="margin-top: 0.8rem;">단체전 구성</label>
+            <select id="teamMatchFormat" name="teamMatchFormat">
+                <option value="SINGLES_ONLY">단식만</option>
+                <option value="SINGLE_DOUBLE_SINGLE">단복단</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="matchFormat">경기 운영 방식</label>
+            <select id="matchFormat" name="matchFormat" required>
+                <option value="ROUND_ROBIN">조별 풀리그</option>
+                <option value="PRELIMINARY_TOURNAMENT">예선+본선 토너먼트</option>
+            </select>
+        </div>
+        <div class="form-group" id="roundRobinRankingTypeGroup" style="display: none;">
+            <label for="roundRobinRankingType">풀리그 순위 기준</label>
+            <select id="roundRobinRankingType" name="roundRobinRankingType">
+                <option value="POINTS">승점 방식</option>
+                <option value="WINS">승수 방식</option>
+            </select>
+        </div>
+        <div class="form-group" id="tournamentTypeGroup" style="display: none;">
+            <label for="tournamentType">토너먼트 대진 유형</label>
+            <select id="tournamentType" name="tournamentType">
+                <option value="">선택하세요</option>
+                <option value="STANDARD">📊 단방향 (순차 진행)</option>
+                <option value="SPLIT">⚔️ 양방향 (좌우 대칭)</option>
+            </select>
+            <small style="color: #888; display: block; margin-top: 0.5rem;">
+                단방향: 일반적인 토너먼트 대진표<br>
+                양방향: 좌우에서 가운데로 모이는 대진표
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="playersPerGroup">조별 인원수</label>
+            <input type="number" id="playersPerGroup" name="playersPerGroup" placeholder="예: 4" required>
+        </div>
+        <div class="form-group">
+            <label for="advancingPlayersPerGroup">조별 본선 진출 인원 (예선+본선 토너먼트 시)</label>
+            <input type="number" id="advancingPlayersPerGroup" name="advancingPlayersPerGroup" placeholder="예: 2" value="2" required>
+        </div>
+        <div class="form-group">
+            <label for="location">경기 지역</label>
+            <input type="text" id="location" name="location" placeholder="예: 서울 강남 탁구장" required>
+        </div>
+        <div class="form-group">
+            <label for="venueAddress">경기장 주소</label>
+            <input type="text" id="venueAddress" name="venueAddress" placeholder="예: 서울시 강남구 테헤란로 123">
+        </div>
+        <div class="form-group">
+            <label for="contactInfo">연락처</label>
+            <input type="text" id="contactInfo" name="contactInfo" placeholder="예: 010-1234-5678">
+        </div>
+        <div class="form-group">
+            <label for="matchDescription">경기 방식 설명</label>
+            <textarea id="matchDescription" name="matchDescription" rows="3" placeholder="예: 예선 풀리그 후 상위 2명 본선 진출"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">방 생성하기</button>
+        <p style="text-align:center; margin-top:1rem;"><a th:href="@{/}">홈으로 돌아가기</a></p>
+    </form>
+</div>
+
+<script>
+    // 경기 운영 방식 변경 시 토너먼트 유형 필드 표시/숨김
+    document.getElementById('matchFormat').addEventListener('change', function() {
+        const tournamentTypeGroup = document.getElementById('tournamentTypeGroup');
+        const tournamentType = document.getElementById('tournamentType');
+        const roundRobinRankingTypeGroup = document.getElementById('roundRobinRankingTypeGroup');
+        const roundRobinRankingType = document.getElementById('roundRobinRankingType');
+        
+        if (this.value === 'PRELIMINARY_TOURNAMENT') {
+            tournamentTypeGroup.style.display = 'block';
+            tournamentType.required = true;
+            roundRobinRankingTypeGroup.style.display = 'block';
+            roundRobinRankingType.required = true;
+        } else {
+            tournamentTypeGroup.style.display = 'none';
+            tournamentType.required = false;
+            tournamentType.value = '';
+            roundRobinRankingTypeGroup.style.display = 'block';
+            roundRobinRankingType.required = true;
+        }
+    });
+
+    const gameTypeEl = document.getElementById('gameType');
+    const teamOptionsGroup = document.getElementById('teamOptionsGroup');
+    const teamSizeEl = document.getElementById('teamSize');
+    const teamMatchFormatEl = document.getElementById('teamMatchFormat');
+
+    gameTypeEl.addEventListener('change', function() {
+        if (this.value === 'TEAM') {
+            teamOptionsGroup.style.display = 'block';
+            teamSizeEl.required = true;
+            teamMatchFormatEl.required = true;
+        } else {
+            teamOptionsGroup.style.display = 'none';
+            teamSizeEl.required = false;
+            teamMatchFormatEl.required = false;
+        }
+    });
+
+    document.getElementById('matchFormat').dispatchEvent(new Event('change'));
+    gameTypeEl.dispatchEvent(new Event('change'));
+
+    document.getElementById('create-room-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // 풀리그인 경우 tournamentType 제거
+        if (data.matchFormat === 'ROUND_ROBIN') {
+            delete data.tournamentType;
+        }
+
+        fetch('/api/league-rooms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', },
+            body: JSON.stringify(data),
+        })
+            .then(response => {
+                if (response.status === 201) {
+                    alert('리그 방이 성공적으로 생성되었습니다.');
+                    window.location.href = '/';
+                } else {
+                    return response.json().then(err => { throw new Error(err.message) });
+                }
+            })
+            .catch(error => {
+                alert(error.message || '리그 생성 중 오류가 발생했습니다.');
+            });
+    });
+</script>
+</body>
+</html>

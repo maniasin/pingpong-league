@@ -1,0 +1,1079 @@
+/* ============================================= */
+/* 🏓 PingPong League - 스포츠 테마 디자인     */
+/* ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* 스포츠 브랜드 컬러 팔레트 */
+    --primary-color: #00D9FF;
+    --primary-hover: #00B8D4;
+    --secondary-color: #FF3D71;
+    --accent-gold: #FFD700;
+    --accent-green: #00E676;
+    
+    /* 다크 테마 베이스 */
+    --dark-bg: #0A0E27;
+    --card-bg: linear-gradient(135deg, #1A1F3A 0%, #151832 100%);
+    --card-bg-solid: #1A1F3A;
+    --input-bg: #252A48;
+    --hover-bg: #2A2F4A;
+    
+    /* 텍스트 컬러 */
+    --text-light: #FFFFFF;
+    --text-muted: #9BA4C1;
+    --text-accent: var(--primary-color);
+    
+    /* 보더 & 라인 */
+    --border-color: #2C3354;
+    --border-highlight: var(--primary-color);
+    
+    /* 상태 컬러 */
+    --success-color: #00E676;
+    --error-color: #FF3D71;
+    --warning-color: #FFC107;
+    --info-color: var(--primary-color);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #0A0E27 0%, #141733 50%, #0A0E27 100%);
+    background-attachment: fixed;
+    color: var(--text-light);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* 스포츠 배경 패턴 효과 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 61, 113, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+/* ============================================= */
+/* 헤더 & 네비게이션 - 스포츠 스타일            */
+/* ============================================= */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color), transparent);
+}
+
+header h1 a {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #00F5FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+header h1 a::after {
+    content: '🏓';
+    position: absolute;
+    right: -35px;
+    top: -5px;
+    font-size: 1.5rem;
+    animation: ping-pong-bounce 2s ease-in-out infinite;
+}
+
+@keyframes ping-pong-bounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(10deg); }
+    75% { transform: translateY(-5px) rotate(-10deg); }
+}
+
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+header nav .user-info {
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    background: var(--input-bg);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+
+header nav .user-info span {
+    font-weight: 700;
+    color: var(--accent-gold);
+}
+
+/* ============================================= */
+/* 버튼 스타일 - 스포츠 브랜드 느낌             */
+/* ============================================= */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.8rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #00B8D4 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(0, 217, 255, 0.5);
+}
+
+.btn-secondary {
+    background: var(--input-bg);
+    color: var(--text-light);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--error-color) 0%, #FF1744 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 61, 113, 0.3);
+}
+
+.btn-danger:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(255, 61, 113, 0.5);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color) 0%, #00C853 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(0, 230, 118, 0.5);
+}
+
+.btn-sm {
+    padding: 0.5rem 1.2rem;
+    font-size: 0.9rem;
+}
+
+/* ============================================= */
+/* 카드 스타일 - 스포츠 매거진 느낌             */
+/* ============================================= */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.section-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.section-header h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.card {
+    display: block;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--text-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 217, 255, 0.2);
+    border-color: var(--primary-color);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.location-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #fff;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card h3 {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.card p strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ============================================= */
+/* 폼 스타일 - 모던 입력 필드                   */
+/* ============================================= */
+
+.form-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 3rem;
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.form-container h1 {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), #00F5FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.form-group {
+    margin-bottom: 1.8rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.6rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-light);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.1);
+    background: var(--hover-bg);
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.error-message {
+    color: var(--error-color);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* ============================================= */
+/* 테이블 스타일 - 스포츠 통계 느낌             */
+/* ============================================= */
+
+.table-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1.2rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+th:last-child, td:last-child {
+    white-space: normal;
+    min-width: 150px;
+}
+
+thead th {
+    background: var(--input-bg);
+    color: var(--text-light);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+tbody tr {
+    transition: background 0.2s;
+}
+
+tbody tr:hover {
+    background: rgba(0, 217, 255, 0.05);
+}
+
+tbody td {
+    color: var(--text-light);
+}
+
+/* 그리드 테이블 (조별 경기 결과 매트릭스) */
+.grid-table-container {
+    overflow-x: auto;
+    margin-top: 1.5rem;
+}
+
+.grid-table {
+    width: auto;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.grid-table th,
+.grid-table td {
+    padding: 0.8rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    min-width: 80px;
+}
+
+.grid-table th {
+    background: var(--input-bg);
+    font-weight: 600;
+}
+
+.grid-table .diagonal-cell {
+    background: var(--hover-bg);
+    color: var(--text-muted);
+}
+
+.grid-table .cell-win {
+    color: var(--accent-green);
+    font-weight: 700;
+}
+
+.grid-table .cell-loss {
+    color: var(--text-muted);
+}
+
+/* ============================================= */
+/* 상세 페이지 스타일                           */
+/* ============================================= */
+
+.detail-container {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 3rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.detail-header {
+    margin-bottom: 2.5rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 2rem;
+    position: relative;
+}
+
+.detail-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+.detail-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+.detail-info {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.detail-info p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.detail-info p span,
+.detail-info p strong {
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.participants-section h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.participants-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+
+.participants-list li {
+    background: var(--input-bg);
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.participants-list li:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.actions,
+.actions-grid {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.actions > div,
+.actions > form,
+.header-actions > div,
+.header-actions > form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* ============================================= */
+/* 토너먼트 대진표 스타일                       */
+/* ============================================= */
+
+.bracket-container {
+    overflow-x: auto;
+    padding: 2.5rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    margin-top: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.jQBracket .team {
+    background: var(--input-bg) !important;
+    color: var(--text-light) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+}
+
+.jQBracket .team:hover {
+    background: var(--hover-bg) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.jQBracket .team.win {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover)) !important;
+    border-color: var(--accent-gold) !important;
+}
+
+.jQBracket .team.win .label {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.jQBracket .connector {
+    border-color: var(--border-color) !important;
+}
+
+.jQBracket .team.highlight {
+    background: linear-gradient(135deg, var(--accent-gold), #FFA000) !important;
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+    }
+}
+
+/* ============================================= */
+/* 조별 리그 스타일                             */
+/* ============================================= */
+
+.group-container {
+    margin-bottom: 3rem;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.group-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.winner {
+    font-weight: 700;
+    color: var(--accent-gold) !important;
+}
+
+.score-input {
+    width: 60px;
+    padding: 0.6rem;
+    text-align: center;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.score-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+}
+
+.score-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.score-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 0.75rem;
+}
+
+.score-form .player-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.score-form .player-left {
+    text-align: left;
+}
+
+.score-form .player-right {
+    text-align: right;
+}
+
+.score-vs {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+}
+
+.score-sep {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.score-inputs {
+    justify-items: center;
+}
+
+.score-inputs .score-input {
+    width: 80px;
+}
+
+/* 순위표 테이블 스타일 개선 */
+#standings-table {
+    table-layout: auto;
+}
+
+#standings-table th,
+#standings-table td {
+    padding: 1rem 1.2rem;
+    text-align: center;
+}
+
+#standings-table th:first-child,
+#standings-table td:first-child {
+    width: 60px;
+    font-weight: 700;
+}
+
+#standings-table th:nth-child(2),
+#standings-table td:nth-child(2) {
+    text-align: left;
+    min-width: 120px;
+    font-weight: 600;
+}
+
+#standings-table th:last-child,
+#standings-table td:last-child {
+    text-align: left;
+    min-width: 200px;
+    max-width: 300px;
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 0.9rem;
+}
+
+#standings-table td:nth-child(3),
+#standings-table td:nth-child(4),
+#standings-table td:nth-child(5),
+#standings-table td:nth-child(6),
+#standings-table td:nth-child(7) {
+    width: 80px;
+}
+
+/* 순위별 배경색 강조 */
+#standings-table tbody tr:nth-child(1) {
+    background: rgba(255, 215, 0, 0.1);
+}
+
+#standings-table tbody tr:nth-child(1) td:first-child {
+    color: var(--accent-gold);
+    font-size: 1.2rem;
+}
+
+#standings-table tbody tr:nth-child(2) {
+    background: rgba(192, 192, 192, 0.08);
+}
+
+#standings-table tbody tr:nth-child(2) td:first-child {
+    color: #C0C0C0;
+    font-size: 1.1rem;
+}
+
+#standings-table tbody tr:nth-child(3) {
+    background: rgba(205, 127, 50, 0.08);
+}
+
+#standings-table tbody tr:nth-child(3) td:first-child {
+    color: #CD7F32;
+    font-size: 1.1rem;
+}
+
+#standings-table tbody tr:hover {
+    background: rgba(0, 217, 255, 0.15) !important;
+}
+
+/* ============================================= */
+/* 탭 메뉴 스타일                               */
+/* ============================================= */
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 2.5rem;
+}
+
+.tab-link {
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tab-link:hover {
+    color: var(--text-light);
+}
+
+.tab-link.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================= */
+/* 모달 스타일                                  */
+/* ============================================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.modal-content.modal-wide {
+    max-width: 900px;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 2rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: var(--error-color);
+}
+
+/* ============================================= */
+/* 상태 뱃지                                    */
+/* ============================================= */
+
+.status-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-open {
+    background: linear-gradient(135deg, var(--success-color), #00C853);
+    color: #fff;
+}
+
+.status-in-progress {
+    background: linear-gradient(135deg, var(--info-color), var(--primary-hover));
+    color: #fff;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, var(--text-muted), #666);
+    color: #fff;
+}
+
+/* ============================================= */
+/* 반응형 디자인                                */
+/* ============================================= */
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    header h1 a {
+        font-size: 1.5rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .section-header .btn {
+        width: 100%;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .form-container {
+        padding: 2rem 1.5rem;
+    }
+
+    .tabs {
+        overflow-x: auto;
+    }
+
+    .actions,
+    .actions-grid {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    /* 모바일에서 모달 크기 조정 */
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .modal-content.modal-wide {
+        max-width: 95%;
+    }
+
+    /* 모바일에서 테이블 폰트 크기 조정 */
+    #standings-table th,
+    #standings-table td {
+        padding: 0.8rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    #standings-table th:last-child,
+    #standings-table td:last-child {
+        min-width: 120px;
+    }
+}
+
+/* ============================================= */
+/* 스크롤바 커스터마이징                        */
+/* ============================================= */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--primary-hover), var(--primary-color));
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리그 방 정보 수정</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <form id="edit-room-form" class="form-container">
+        <h1>리그 방 정보 수정</h1>
+        <div class="form-group">
+            <label for="title">방 제목</label>
+            <input type="text" id="title" name="title" required th:value="${leagueRoom.title}">
+        </div>
+        <div class="form-group">
+            <label for="maxParticipants">최대 참가 인원</label>
+            <input type="number" id="maxParticipants" name="maxParticipants" required th:value="${leagueRoom.maxParticipants}">
+        </div>
+        <div class="form-group">
+            <label for="eventDate">경기 날짜</label>
+            <input type="date" id="eventDate" name="eventDate" required th:value="${#temporals.format(leagueRoom.eventDateTime, 'yyyy-MM-dd')}">
+        </div>
+        <div class="form-group">
+            <label for="eventTime">경기 시간</label>
+            <input type="time" id="eventTime" name="eventTime" required th:value="${#temporals.format(leagueRoom.eventDateTime, 'HH:mm')}">
+        </div>
+        <div class="form-group" th:if="${leagueRoom.gameType.name() == 'TEAM'}">
+            <label for="teamSize">단체전 인원수</label>
+            <select id="teamSize" name="teamSize">
+                <option value="2" th:selected="${leagueRoom.teamSize == 2}">2인 단체전</option>
+                <option value="3" th:selected="${leagueRoom.teamSize == 3}">3인 단체전</option>
+            </select>
+            <label for="teamMatchFormat" style="margin-top: 0.8rem;">단체전 구성</label>
+            <select id="teamMatchFormat" name="teamMatchFormat">
+                <option value="SINGLES_ONLY" th:selected="${leagueRoom.teamMatchFormat?.name() == 'SINGLES_ONLY'}">단식만</option>
+                <option value="SINGLE_DOUBLE_SINGLE" th:selected="${leagueRoom.teamMatchFormat?.name() == 'SINGLE_DOUBLE_SINGLE'}">단복단</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="location">경기 지역</label>
+            <input type="text" id="location" name="location" required th:value="${leagueRoom.location}">
+        </div>
+        <div class="form-group">
+            <label for="venueAddress">경기장 주소</label>
+            <input type="text" id="venueAddress" name="venueAddress" th:value="${leagueRoom.venueAddress}">
+        </div>
+        <div class="form-group">
+            <label for="contactInfo">연락처</label>
+            <input type="text" id="contactInfo" name="contactInfo" th:value="${leagueRoom.contactInfo}">
+        </div>
+        <div class="form-group">
+            <label for="matchDescription">경기 방식 설명</label>
+            <textarea id="matchDescription" name="matchDescription" rows="3" th:text="${leagueRoom.matchDescription}"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="playersPerGroup">조별 인원수</label>
+            <input type="number" id="playersPerGroup" name="playersPerGroup" required th:value="${leagueRoom.playersPerGroup}">
+        </div>
+
+        <div class="form-group" th:if="${leagueRoom.matchFormat.name() == 'ROUND_ROBIN' or leagueRoom.matchFormat.name() == 'PRELIMINARY_TOURNAMENT'}">
+            <label for="roundRobinRankingType">풀리그 순위 기준</label>
+            <select id="roundRobinRankingType" name="roundRobinRankingType">
+                <option value="POINTS" th:selected="${leagueRoom.roundRobinRankingType?.name() == 'POINTS'}">승점 방식</option>
+                <option value="WINS" th:selected="${leagueRoom.roundRobinRankingType?.name() == 'WINS'}">승수 방식</option>
+            </select>
+        </div>
+
+        <div class="form-group" th:if="${leagueRoom.matchFormat.name() == 'PRELIMINARY_TOURNAMENT'}">
+            <label for="advancingPlayersPerGroup">조별 본선 진출 인원</label>
+            <input type="number" id="advancingPlayersPerGroup" name="advancingPlayersPerGroup" required th:value="${leagueRoom.advancingPlayersPerGroup}">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;">수정하기</button>
+        <p style="text-align:center; margin-top:1rem;"><a th:href="@{/league-rooms/{id}(id=${leagueRoom.id})}">취소하고 돌아가기</a></p>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    const roomId = /*[[${leagueRoom.id}]]*/ null;
+    document.getElementById('edit-room-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch(`/api/league-rooms/${roomId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', },
+            body: JSON.stringify(data),
+        })
+            .then(async response => {
+                if (response.ok) {
+                    alert('리그 정보가 성공적으로 수정되었습니다.');
+                    window.location.href = `/league-rooms/${roomId}`;
+                } else {
+                    const error = await response.json();
+                    alert(error.message || '수정에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('요청 중 오류가 발생했습니다.');
+            });
+    });
+</script>
+</body>
+</html>

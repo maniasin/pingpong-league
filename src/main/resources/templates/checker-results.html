@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부수 체크 결과</title>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    .source-badge {
+      display: inline-block;
+      background-color: #007bff; /* 파란색 계열 뱃지 */
+      color: #fff;
+      padding: 0.2rem 0.6rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-right: 0.75rem;
+      vertical-align: middle;
+    }
+
+    .result-table {
+      width: 100%;
+      table-layout: fixed; /* 테이블 레이아웃을 고정하여 너비 설정 강제 */
+    }
+
+    .result-table th,
+    .result-table td {
+      font-size: 0.9rem; /* 기본 폰트 크기보다 약간 작게 설정 */
+      padding: 0.8rem;   /* 셀 내부 여백 조정 */
+      white-space: normal;  /* 자동 줄바꿈 허용 */
+      word-break: keep-all; /* 한글의 경우 단어 단위로 줄바꿈하여 가독성 향상 */
+      vertical-align: middle; /* 세로 중앙 정렬 */
+    }
+  </style>
+
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><a href="/">PingPong League</a></h1>
+    <nav>
+      <a th:href="@{/checker}" class="btn btn-secondary">새로 검색</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="section-header">
+      <h2 th:text="|'${playerName}'님 검색 결과|"></h2>
+
+      <div style="text-align: center; margin-top: -1.0rem; margin-bottom: 2rem; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 0.75rem;">
+
+        <span th:if="${placingSummary['우승'] != null and placingSummary['우승'] > 0}"
+              style="color: #ffc107; font-weight: bold;"
+              th:text="|🏆 우승 ${placingSummary.get('우승')}회|"></span>
+
+        <span th:if="${placingSummary['준우승'] != null and placingSummary['준우승'] > 0}"
+              style="color: #c0c0c0; font-weight: bold;"
+              th:text="|🥈 준우승 ${placingSummary.get('준우승')}회|"></span>
+
+        <span th:if="${placingSummary['3위'] != null and placingSummary['3위'] > 0}"
+              style="color: #cd7f32; font-weight: bold;"
+              th:text="|🥉 3위 ${placingSummary.get('3위')}회|"></span>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="result-table">
+        <colgroup>
+          <col style="width: 35%;"> <col style="width: 15%;"> <col style="width: 50%;"> </colgroup>
+        <thead>
+        <tr>
+          <th>대회명</th>
+          <th>대회일시</th>
+          <th>참가종목 및 결과</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(records)}">
+          <td colspan="3" style="text-align: center;">입상 기록이 없습니다.</td>
+        </tr>
+        <tr th:each="record : ${records}">
+          <td>
+            <span class="source-badge" th:text="${record.tournament.organizer}"></span>
+            <span th:text="${record.tournament.name}"></span>
+          </td>
+          <td th:text="${#temporals.format(record.tournament.tournamentDate, 'yyyy-MM-dd')}">2025-07-14</td>
+          <td th:text="${record.division + ' ' + record.detail + ' ' + record.placing}">남자 통합 1부 우승</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리그 방 상세정보</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><a href="/">PingPong League</a></h1>
+        <nav>
+            <a th:href="@{/}" class="btn btn-secondary">홈으로</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="detail-container">
+            <div class="detail-header">
+                <span class="location-badge" th:text="${leagueRoom.location}"></span>
+                <h1 th:text="${leagueRoom.title}">League Title</h1>
+                <div class="detail-info">
+                    <p>일시: <strong th:text="${#temporals.format(leagueRoom.eventDateTime, 'yyyy.MM.dd HH:mm')}"></strong></p>
+                </div>
+                <div class="detail-info">
+                    <p>방장: <span th:text="${leagueRoom.ownerUsername}"></span></p>
+                    <p>상태: <span id="room-status-text" th:text="${leagueRoom.status.displayName}"></span></p>
+                </div>
+                <div class="detail-info">
+                    <p>경기 방식: <span th:text="${leagueRoom.gameType.displayName}"></span></p>
+                    <p>운영 방식: <span th:text="${leagueRoom.matchFormat.displayName}"></span></p>
+                    <p th:if="${leagueRoom.matchFormat.name() == 'ROUND_ROBIN' or leagueRoom.matchFormat.name() == 'PRELIMINARY_TOURNAMENT'}">
+                        풀리그 기준: <span th:text="${leagueRoom.roundRobinRankingType != null ? leagueRoom.roundRobinRankingType.displayName : '-'}"></span>
+                    </p>
+                    <p th:if="${leagueRoom.gameType.name() == 'TEAM'}">
+                        단체전 인원: <span th:text="${leagueRoom.teamSize != null ? leagueRoom.teamSize + '인' : '-'}"></span>
+                    </p>
+                    <p th:if="${leagueRoom.gameType.name() == 'TEAM'}">
+                        단체전 구성: <span th:text="${leagueRoom.teamMatchFormat != null ? leagueRoom.teamMatchFormat.displayName : '-'}"></span>
+                    </p>
+                    <p>조별 인원: <span th:text="${leagueRoom.playersPerGroup} + '명'"></span></p>
+                    <p th:if="${leagueRoom.matchFormat.name() == 'PRELIMINARY_TOURNAMENT'}">
+                        본선 진출: <span th:text="'조당 ' + ${leagueRoom.advancingPlayersPerGroup} + '명'"></span>
+                    </p>
+                    <p th:if="${leagueRoom.tournamentType != null}">
+                        토너먼트: <span th:text="${leagueRoom.tournamentType.displayName}"></span>
+                    </p>
+                </div>
+                <div class="detail-info">
+                    <p>경기장 주소: <span th:text="${leagueRoom.venueAddress != null ? leagueRoom.venueAddress : '-'}"></span></p>
+                    <p>연락처: <span th:text="${leagueRoom.contactInfo != null ? leagueRoom.contactInfo : '-'}"></span></p>
+                </div>
+                <div class="detail-info">
+                    <p>경기 방식 설명: <span th:text="${leagueRoom.matchDescription != null ? leagueRoom.matchDescription : '-'}"></span></p>
+                </div>
+            </div>
+
+            <div class="participants-section">
+                <h2>참가자 (<span id="participant-count">0</span> / <span th:text="${leagueRoom.maxParticipants}"></span>)</h2>
+                <ul id="participants-list" class="participants-list">
+                </ul>
+            </div>
+
+            <div class="participants-manage"
+                 th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'OPEN'}">
+                <h2>참가자 추가</h2>
+                <div class="manage-grid">
+                    <div class="manage-card">
+                        <h4>단일 추가</h4>
+                        <input type="text" id="participant-identifier" list="participant-suggestions" placeholder="아이디 또는 닉네임">
+                        <datalist id="participant-suggestions"></datalist>
+                        <button type="button" id="add-participant-btn" class="btn btn-primary">추가</button>
+                    </div>
+                    <div class="manage-card">
+                        <h4>일괄 추가</h4>
+                        <textarea id="bulk-participants" rows="4" placeholder="아이디/닉네임을 줄바꿈 또는 쉼표로 입력"></textarea>
+                        <button type="button" id="bulk-add-btn" class="btn btn-secondary">일괄 추가</button>
+                    </div>
+                    <div class="manage-card">
+                        <h4>게스트 추가</h4>
+                        <input type="text" id="guest-nickname" placeholder="게스트 닉네임">
+                        <button type="button" id="guest-add-btn" class="btn btn-secondary">게스트 추가</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-assignment"
+                 id="team-assignment-section"
+                 th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'OPEN' and leagueRoom.gameType.name() == 'TEAM'}">
+                <h2>팀 구성</h2>
+                <p class="team-assignment-hint">
+                    팀당 인원: <strong th:text="${leagueRoom.teamSize != null ? leagueRoom.teamSize + '명' : '2명'}"></strong>
+                </p>
+                <div class="team-assignment-actions">
+                    <button type="button" id="auto-team-btn" class="btn btn-secondary">자동 팀 구성</button>
+                    <button type="button" id="save-team-btn" class="btn btn-primary">팀 구성 저장</button>
+                </div>
+                <div id="team-assignment-list" class="team-assignment-list"></div>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="actions-grid">
+
+                <form id="join-form" th:if="${leagueRoom.status.name() == 'OPEN' and !#lists.contains(leagueRoom.participants, #authentication.name)}">
+                    <button type="submit" class="btn btn-primary">리그 참가</button>
+                </form>
+
+                <form id="leave-form" th:if="${leagueRoom.status.name() == 'OPEN' and #lists.contains(leagueRoom.participants, #authentication.name)}">
+                    <button type="submit" class="btn btn-danger">참가 취소</button>
+                </form>
+
+                <form id="start-form" th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'OPEN'}">
+                    <button type="submit" class="btn btn-primary">리그 시작</button>
+                </form>
+                <a th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'OPEN'}" th:href="@{/league-rooms/{roomId}/edit(roomId=${leagueRoom.id})}" class="btn btn-secondary">정보 수정</a>
+
+                <a th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() != 'OPEN'}" th:href="@{/league-rooms/{roomId}/matches(roomId=${leagueRoom.id})}" class="btn btn-secondary">대진표 보기</a>
+
+                <form id="reopen-form" th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'IN_PROGRESS'}">
+                    <button type="submit" class="btn btn-secondary">다시 모집하기</button>
+                </form>
+                <form id="complete-form" th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'IN_PROGRESS'}">
+                    <button type="submit" class="btn btn-primary">리그 종료</button>
+                </form>
+
+                <a href="#" id="view-results-btn" class="btn btn-secondary" th:if="${leagueRoom.ownerUsername == #authentication.name and leagueRoom.status.name() == 'COMPLETED'}">최종 결과 보기</a>
+
+                <form id="delete-form" th:if="${leagueRoom.ownerUsername == #authentication.name}">
+                    <button type="submit" class="btn btn-danger">리그 방 삭제</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<style>
+    .btn-danger {
+        background-color: var(--error-color);
+        color: #fff;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+    }
+
+    .participants-manage {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .manage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .manage-card {
+        background: #1f1f1f;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .manage-card h4 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--text-light);
+    }
+
+    .manage-card input,
+    .manage-card textarea {
+        width: 100%;
+        padding: 0.8rem 0.9rem;
+        border-radius: 10px;
+        border: 1px solid #333;
+        background: var(--input-bg);
+        color: var(--text-light);
+        font-size: 0.95rem;
+    }
+
+    .team-assignment {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .team-assignment-hint {
+        margin: 0.2rem 0 1rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .team-assignment-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .team-assignment-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+    }
+
+    .team-row {
+        background: #1f1f1f;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .team-row input,
+    .team-row select {
+        width: 100%;
+        padding: 0.7rem 0.8rem;
+        border-radius: 10px;
+        border: 1px solid #333;
+        background: var(--input-bg);
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .team-members {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .participants-manage {
+            padding: 1rem;
+        }
+        .manage-card {
+            padding: 0.9rem;
+        }
+        .team-assignment {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<script th:inline="javascript">
+    const roomId = /*[[${leagueRoom.id}]]*/ null;
+
+    // 모든 JS코드를 DOMContentLoaded 안에 넣어서 로딩 순서 문제를 해결합니다.
+    document.addEventListener('DOMContentLoaded', function() {
+        const listElement = document.getElementById('participants-list');
+        const countElement = document.getElementById('participant-count');
+        const isOwner = /*[[${leagueRoom.ownerUsername == #authentication.name}]]*/ false;
+        const ownerUsername = /*[[${leagueRoom.ownerUsername}]]*/ '';
+        const maxParticipants = /*[[${leagueRoom.maxParticipants}]]*/ 0;
+        const roomStatus = /*[[${leagueRoom.status.name()}]]*/ '';
+        const teamSize = /*[[${leagueRoom.teamSize}]]*/ 0;
+        const gameType = /*[[${leagueRoom.gameType.name()}]]*/ '';
+        const teamAssignmentSection = document.getElementById('team-assignment-section');
+        const teamListElement = document.getElementById('team-assignment-list');
+        const autoTeamBtn = document.getElementById('auto-team-btn');
+        const saveTeamBtn = document.getElementById('save-team-btn');
+        const participantInput = document.getElementById('participant-identifier');
+        const suggestionList = document.getElementById('participant-suggestions');
+        let participantsCache = [];
+        let teamsCache = null;
+        let searchTimer = null;
+
+        function loadParticipants() {
+            fetch(`/api/league-rooms/${roomId}/participants-with-id`)
+                .then(response => response.json())
+                .then(participants => {
+                    participantsCache = participants;
+                    listElement.innerHTML = '';
+                    countElement.textContent = participants.length;
+                    if (participants.length === 0) {
+                        listElement.innerHTML = '<li>아직 참가자가 없습니다.</li>';
+                    } else {
+                        participants.forEach(p => {
+                            const li = document.createElement('li');
+                            li.textContent = p.nickname;
+                            if (isOwner && p.nickname !== ownerUsername) {
+                                const removeBtn = document.createElement('button');
+                                removeBtn.textContent = '×';
+                                removeBtn.className = 'btn-remove-participant';
+                                removeBtn.dataset.participantId = p.id;
+                                li.appendChild(removeBtn);
+                            }
+                            listElement.appendChild(li);
+                        });
+                    }
+
+                    const statusTextEl = document.getElementById('room-status-text');
+                    if (statusTextEl && roomStatus === 'OPEN' && participants.length >= maxParticipants) {
+                        statusTextEl.textContent = '모집완료';
+                    }
+
+                    renderTeamAssignment(teamsCache);
+                });
+        }
+
+        loadParticipants();
+
+        // [추가] 삭제 버튼에 대한 이벤트 위임(Event Delegation) 설정
+        listElement.addEventListener('click', function(event) {
+            if (event.target && event.target.matches('.btn-remove-participant')) {
+                const participantId = event.target.dataset.participantId;
+                const participantName = event.target.parentElement.firstChild.textContent;
+                if (confirm(`'${participantName}' 님을 참가자 목록에서 삭제하시겠습니까?`)) {
+                    fetch(`/api/league-rooms/${roomId}/participants/${participantId}`, { method: 'DELETE' })
+                        .then(async response => {
+                            if (response.ok) {
+                                alert('참가자가 삭제되었습니다.');
+                                loadParticipants();
+                            } else {
+                                alert((await response.json()).message || '삭제에 실패했습니다.');
+                            }
+                        });
+                }
+            }
+        });
+
+        const addParticipantBtn = document.getElementById('add-participant-btn');
+        const bulkAddBtn = document.getElementById('bulk-add-btn');
+        const guestAddBtn = document.getElementById('guest-add-btn');
+
+        if (participantInput && suggestionList) {
+            participantInput.addEventListener('input', function() {
+                const query = participantInput.value.trim();
+                if (query.length < 2) {
+                    suggestionList.innerHTML = '';
+                    return;
+                }
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    fetch(`/api/users/search?query=${encodeURIComponent(query)}`)
+                        .then(response => response.ok ? response.json() : [])
+                        .then(users => {
+                            suggestionList.innerHTML = '';
+                            users.forEach(user => {
+                                const option = document.createElement('option');
+                                option.value = user.nickname;
+                                option.label = user.username;
+                                suggestionList.appendChild(option);
+                            });
+                        })
+                        .catch(() => {
+                            suggestionList.innerHTML = '';
+                        });
+                }, 250);
+            });
+        }
+
+        if (addParticipantBtn) {
+            addParticipantBtn.addEventListener('click', function() {
+                const identifier = document.getElementById('participant-identifier').value.trim();
+                if (!identifier) return alert('아이디 또는 닉네임을 입력해주세요.');
+                fetch(`/api/league-rooms/${roomId}/participants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier })
+                })
+                    .then(async response => {
+                        if (response.ok) {
+                            alert('참가자가 추가되었습니다.');
+                            document.getElementById('participant-identifier').value = '';
+                            loadParticipants();
+                        } else {
+                            const error = await response.json();
+                            alert(error.message || '참가자 추가에 실패했습니다.');
+                        }
+                    });
+            });
+        }
+
+        if (bulkAddBtn) {
+            bulkAddBtn.addEventListener('click', function() {
+                const raw = document.getElementById('bulk-participants').value;
+                const identifiers = raw.split(/[\n,]+/).map(v => v.trim()).filter(Boolean);
+                if (identifiers.length === 0) return alert('추가할 아이디/닉네임을 입력해주세요.');
+                fetch(`/api/league-rooms/${roomId}/participants/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifiers })
+                })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || '일괄 추가에 실패했습니다.');
+                        }
+                        return response.json();
+                    })
+                    .then(result => {
+                        const addedCount = result.added ? result.added.length : 0;
+                        const failedCount = result.failed ? result.failed.length : 0;
+                        let message = `추가 완료: ${addedCount}명`;
+                        if (failedCount > 0) {
+                            const reasons = result.failed.map(f => `${f.identifier} (${f.reason})`).join('\\n');
+                            message += `\\n실패: ${failedCount}명\\n${reasons}`;
+                        }
+                        alert(message);
+                        document.getElementById('bulk-participants').value = '';
+                        loadParticipants();
+                    })
+                    .catch(error => alert(error.message));
+            });
+        }
+
+        if (guestAddBtn) {
+            guestAddBtn.addEventListener('click', function() {
+                const nickname = document.getElementById('guest-nickname').value.trim();
+                if (!nickname) return alert('게스트 닉네임을 입력해주세요.');
+                fetch(`/api/league-rooms/${roomId}/participants/guest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname })
+                })
+                    .then(async response => {
+                        if (response.ok) {
+                            alert('게스트 참가자가 추가되었습니다.');
+                            document.getElementById('guest-nickname').value = '';
+                            loadParticipants();
+                        } else {
+                            const error = await response.json();
+                            alert(error.message || '게스트 추가에 실패했습니다.');
+                        }
+                    });
+            });
+        }
+
+        function renderTeamAssignment(teams) {
+            if (!teamAssignmentSection || gameType !== 'TEAM' || !teamListElement) {
+                return;
+            }
+            if (!participantsCache.length) {
+                teamListElement.innerHTML = '<p>참가자가 없습니다.</p>';
+                return;
+            }
+
+            const resolvedTeamSize = teamSize || 2;
+            const teamCount = Math.ceil(participantsCache.length / resolvedTeamSize);
+            const sourceTeams = (teams && teams.length) ? teams : (teamsCache && teamsCache.length ? teamsCache : []);
+            const normalizedTeams = sourceTeams.length
+                ? sourceTeams
+                : Array.from({ length: teamCount }, (_, index) => {
+                    const start = index * resolvedTeamSize;
+                    const memberIds = participantsCache
+                        .slice(start, start + resolvedTeamSize)
+                        .map(member => member.id);
+                    return { name: `팀 ${index + 1}`, memberIds };
+                });
+
+            teamListElement.innerHTML = '';
+            normalizedTeams.forEach((team, index) => {
+                const row = document.createElement('div');
+                row.className = 'team-row';
+                row.dataset.teamIndex = index;
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.placeholder = `팀 ${index + 1}`;
+                nameInput.value = team.name || `팀 ${index + 1}`;
+                nameInput.className = 'team-name-input';
+
+                const membersWrap = document.createElement('div');
+                membersWrap.className = 'team-members';
+
+                const memberIds = Array.isArray(team.memberIds) ? team.memberIds : [];
+                for (let slot = 0; slot < resolvedTeamSize; slot += 1) {
+                    const select = document.createElement('select');
+                    select.className = 'team-member-select';
+
+                    const blankOption = document.createElement('option');
+                    blankOption.value = '';
+                    blankOption.textContent = `팀원 ${slot + 1}`;
+                    select.appendChild(blankOption);
+
+                    participantsCache.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = String(member.id);
+                        option.textContent = member.nickname;
+                        select.appendChild(option);
+                    });
+
+                    if (memberIds[slot]) {
+                        select.value = String(memberIds[slot]);
+                    }
+                    membersWrap.appendChild(select);
+                }
+
+                row.appendChild(nameInput);
+                row.appendChild(membersWrap);
+                teamListElement.appendChild(row);
+            });
+        }
+
+        function collectTeamPayload() {
+            if (!teamListElement) return [];
+            const rows = Array.from(teamListElement.querySelectorAll('.team-row'));
+            return rows.map(row => {
+                const name = row.querySelector('.team-name-input')?.value?.trim() || '';
+                const selects = Array.from(row.querySelectorAll('.team-member-select'));
+                const memberIds = selects
+                    .map(select => select.value)
+                    .filter(Boolean)
+                    .map(value => Number(value));
+                return { name, memberIds };
+            });
+        }
+
+        function validateTeamPayload(payload) {
+            const resolvedTeamSize = teamSize || 2;
+            const allIds = [];
+            for (const team of payload) {
+                if (team.memberIds.length !== resolvedTeamSize) {
+                    alert('각 팀의 인원수를 맞춰주세요.');
+                    return false;
+                }
+                allIds.push(...team.memberIds);
+            }
+            const uniqueIds = new Set(allIds);
+            if (uniqueIds.size !== allIds.length) {
+                alert('같은 참가자가 여러 팀에 배정되어 있습니다.');
+                return false;
+            }
+            if (uniqueIds.size !== participantsCache.length) {
+                const assignedIds = new Set(allIds);
+                const unassigned = participantsCache
+                    .filter(member => !assignedIds.has(member.id))
+                    .map(member => member.nickname);
+                alert(`배정되지 않은 참가자: ${unassigned.join(', ')}`);
+                return false;
+            }
+            return true;
+        }
+
+        function loadTeams() {
+            if (!teamAssignmentSection) return Promise.resolve([]);
+            return fetch(`/api/league-rooms/${roomId}/teams`)
+                .then(response => response.ok ? response.json() : [])
+                .then(teams => {
+                    teamsCache = teams;
+                    return teams;
+                })
+                .catch(() => []);
+        }
+
+        if (teamAssignmentSection) {
+            loadTeams().then(renderTeamAssignment);
+        }
+
+        if (autoTeamBtn) {
+            autoTeamBtn.addEventListener('click', function() {
+                fetch(`/api/league-rooms/${roomId}/teams/auto`, { method: 'POST' })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || '자동 팀 구성에 실패했습니다.');
+                        }
+                        return response.json();
+                    })
+                    .then(teams => {
+                        teamsCache = teams;
+                        renderTeamAssignment(teams);
+                        alert('자동 팀 구성이 완료되었습니다.');
+                    })
+                    .catch(error => alert(error.message));
+            });
+        }
+
+        if (saveTeamBtn) {
+            saveTeamBtn.addEventListener('click', function() {
+                const payload = collectTeamPayload();
+                if (!validateTeamPayload(payload)) return;
+                fetch(`/api/league-rooms/${roomId}/teams`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ teams: payload })
+                })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || '팀 구성 저장에 실패했습니다.');
+                        }
+                        return response.json();
+                    })
+                    .then(teams => {
+                        teamsCache = teams;
+                        renderTeamAssignment(teams);
+                        alert('팀 구성이 저장되었습니다.');
+                    })
+                    .catch(error => alert(error.message));
+            });
+        }
+
+        // --- 모든 폼/버튼 이벤트 리스너들 ---
+        const joinForm = document.getElementById('join-form');
+        if (joinForm) {
+            joinForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                fetch(`/api/league-rooms/${roomId}/join`, { method: 'POST' })
+                    .then(async response => {
+                        if (response.ok) {
+                            alert('리그 참가가 완료되었습니다.');
+                            window.location.reload();
+                        } else {
+                            alert((await response.json()).message || '리그 참가에 실패했습니다.');
+                        }
+                    });
+            });
+        }
+
+        const leaveForm = document.getElementById('leave-form');
+        if (leaveForm) {
+            leaveForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (confirm('정말로 리그 참가를 취소하시겠습니까?')) {
+                    fetch(`/api/league-rooms/${roomId}/participants`, { method: 'DELETE' })
+                        .then(async response => {
+                            if (response.ok) {
+                                alert('참가가 취소되었습니다.');
+                                window.location.reload();
+                            } else {
+                                alert((await response.json()).message || '참가 취소에 실패했습니다.');
+                            }
+                        });
+                }
+            });
+        }
+
+        const startForm = document.getElementById('start-form');
+        if (startForm) {
+            startForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                fetch(`/api/league-rooms/${roomId}/start`, { method: 'POST' })
+                    .then(async response => {
+                        if (response.ok) {
+                            alert('리그가 시작되었습니다! 대진표를 확인하세요.');
+                            window.location.href = `/league-rooms/${roomId}/matches`;
+                        } else {
+                            alert((await response.json()).message || '리그 시작에 실패했습니다.');
+                        }
+                    });
+            });
+        }
+
+        const reopenForm = document.getElementById('reopen-form');
+        if(reopenForm) {
+            reopenForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (confirm('정말로 리그를 다시 모집 상태로 변경하시겠습니까?\n기존 대진표는 모두 삭제됩니다.')) {
+                    fetch(`/api/league-rooms/${roomId}/reopen`, { method: 'POST' })
+                        .then(async response => {
+                            if(response.ok) {
+                                alert('리그가 다시 모집 상태로 변경되었습니다.');
+                                window.location.reload();
+                            } else {
+                                alert((await response.json()).message || '상태 변경에 실패했습니다.');
+                            }
+                        });
+                }
+            });
+        }
+
+        const completeForm = document.getElementById('complete-form');
+        if(completeForm) {
+            completeForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (confirm('정말로 리그를 종료하시겠습니까?\n종료 후에는 되돌릴 수 없습니다.')) {
+                    fetch(`/api/league-rooms/${roomId}/complete`, { method: 'POST' })
+                        .then(async response => {
+                            if(response.ok) {
+                                alert('리그가 성공적으로 종료되었습니다.');
+                                window.location.reload();
+                            } else {
+                                alert((await response.json()).message || '리그 종료에 실패했습니다.');
+                            }
+                        });
+                }
+            });
+        }
+
+        const deleteForm = document.getElementById('delete-form');
+        if(deleteForm) {
+            deleteForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (confirm('정말로 이 리그 방을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                    fetch(`/api/league-rooms/${roomId}`, { method: 'DELETE' })
+                        .then(response => {
+                            if(response.status === 204) { // No Content
+                                alert('리그 방이 삭제되었습니다.');
+                                window.location.href = '/';
+                            } else {
+                                alert('리그 방 삭제에 실패했습니다.');
+                            }
+                        });
+                }
+            });
+        }
+
+        // 최종 결과 모달 관련 스크립트
+        const viewResultsBtn = document.getElementById('view-results-btn');
+        const resultsModal = document.getElementById('final-results-modal');
+        const modals = document.querySelectorAll('.modal-overlay');
+
+        if (viewResultsBtn && resultsModal) {
+            viewResultsBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                const resultsContent = document.getElementById('results-content');
+
+                fetch(`/api/league-rooms/${roomId}/final-results`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('결과를 불러오는 데 실패했습니다.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if(resultsContent) {
+                            if (Array.isArray(data.rankings) && data.rankings.length > 0) {
+                                const rankingHtml = data.rankings.map(row => `<li>${row}</li>`).join('');
+                                resultsContent.innerHTML = `
+                                    <div style="text-align: left;">
+                                        <p style="font-size: 1.2rem; margin-bottom: 0.6rem;">📋 <strong>최종 순위</strong></p>
+                                        <ul style="list-style: none; padding-left: 1rem; margin: 0;">${rankingHtml}</ul>
+                                    </div>
+                                `;
+                            } else {
+                                const firstPlaceHtml = data.winner.split(', ').map(name => `<li>${name}</li>`).join('');
+                                const secondPlaceHtml = data.runnerUp.split(', ').map(name => `<li>${name}</li>`).join('');
+                                const thirdPlaceHtml = data.jointThird.map(name => `<li>${name}</li>`).join('');
+
+                                resultsContent.innerHTML = `
+                                <div style="text-align: left; margin-bottom: 1.5rem;">
+                                    <p style="font-size: 1.5rem; margin-bottom: 0.5rem;">🥇 <strong>1위</strong></p>
+                                    <ul style="list-style: none; padding-left: 1rem;">${firstPlaceHtml}</ul>
+                                </div>
+                                <div style="text-align: left; margin-bottom: 1.5rem;">
+                                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">🥈 <strong>2위</strong></p>
+                                    <ul style="list-style: none; padding-left: 1rem;">${secondPlaceHtml}</ul>
+                                </div>
+                                <div style="text-align: left;">
+                                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">🥉 <strong>3위</strong></p>
+                                    <ul style="list-style: none; padding-left: 1rem;">${thirdPlaceHtml}</ul>
+                                </div>
+                            `;
+                            }
+                        }
+                        resultsModal.classList.add('visible');
+                    })
+                    .catch(error => alert(error.message));
+            });
+        }
+
+        // 모든 모달 닫기 기능
+        modals.forEach(modal => {
+            const closeButton = modal.querySelector('.modal-close');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => modal.classList.remove('visible'));
+            }
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.classList.remove('visible');
+                }
+            });
+        });
+    });
+</script>
+<div id="final-results-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🏆 최종 결과 🏆</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align: center;">
+            <div id="results-content">
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

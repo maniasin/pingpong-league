@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bracket Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/js/jquery.bracket.min.js"></script>
+    <link rel="stylesheet" href="/css/jquery.bracket.min.css"/>
+    <link rel="stylesheet" href="/css/style.css"/>
+    <style>
+        body { padding: 50px; }
+        /* 대진표 라이브러리 스타일은 style.css의 것을 따르도록 여기서도 일부 정의 */
+        .jQBracket .team .label { color: #f0f0f0 !important; }
+        .jQBracket .team.win .label { color: var(--primary-color) !important; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<h1>완벽한 데이터 테스트</h1>
+<p>이 페이지의 대진표가 정상적으로 보인다면, 문제는 ViewController에서 만드는 데이터에 있습니다.</p>
+<p>만약 이 페이지에서도 선이 깨진다면, 라이브러리 파일(.js, .css) 자체의 문제입니다.</p>
+<div id="test-bracket" class="bracket-container" style="margin-top: 2rem;"></div>
+
+<script>
+    // 하드코딩된 완벽한 8강 토너먼트 데이터
+    const perfectData = {
+        teams: [
+            ["Player 1", "Player 2"],
+            ["Player 3", "Player 4"],
+            ["Player 5", "Player 6"],
+            ["Player 7", "Player 8"]
+        ],
+        results: [
+            [ /* 8강 결과 */
+                [3, 1], [0, 3], [3, 2], [1, 3]
+            ],
+            [ /* 4강 결과 */
+                [3, 0], [1, 3]
+            ],
+            [ /* 결승 결과 */
+                [2, 3]
+            ]
+        ]
+    };
+
+    $(document).ready(function() {
+        $('#test-bracket').bracket({
+            init: perfectData,
+            skipConsolationRound: true,
+            disableEdit: true // 읽기 전용 모드로 렌더링
+        });
+    });
+</script>
+
+</body>
+</html>
