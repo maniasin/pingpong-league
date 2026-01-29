@@ -38,3 +38,12 @@ out/
 
 # Crawler account info
 /src/main/resources/account.properties
+
+# Local data / logs / dumps
+*.log
+logs/
+h2db/
+screen/
+debug_page_source.html
+error_screenshot.png
+dailylog.log
